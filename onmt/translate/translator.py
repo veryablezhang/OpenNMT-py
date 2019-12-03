@@ -355,6 +355,9 @@ class Translator(object):
 
         start_time = time.time()
 
+        f = open("pred_score.txt", 'a', encoding = 'utf-8')
+        g = open("tgt_score.txt", 'a', encoding = 'utf-8')
+
         for batch in data_iter:
             batch_data = self.translate_batch(
                 batch, data.src_vocabs, attn_debug
@@ -365,7 +368,10 @@ class Translator(object):
                 all_scores += [trans.pred_scores[:self.n_best]]
                 pred_score_total += trans.pred_scores[0]
                 pred_words_total += len(trans.pred_sents[0])
+                f.write(str(trans.pred_scores[0].item()) + '\n')
+
                 if tgt is not None:
+                    g.write(str(trans.gold_score.item()) + '\n')
                     gold_score_total += trans.gold_score
                     gold_words_total += len(trans.gold_sent) + 1
 
@@ -420,6 +426,8 @@ class Translator(object):
                         self.logger.info(output)
                     else:
                         os.write(1, output.encode('utf-8'))
+        f.close()
+        g.close()
 
         end_time = time.time()
 

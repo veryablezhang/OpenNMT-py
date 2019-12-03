@@ -44,9 +44,9 @@ def get_features():
         train_enzh = f.readlines()
     with open("test.txt", 'r', encoding = 'utf-8') as f:
         test_enzh = f.readlines()
-    with open("train-bpe2.txt", 'r', encoding = 'utf-8') as f:
+    with open("train-bpe.txt", 'r', encoding = 'utf-8') as f:
         train_enzh_bpe = f.readlines()
-    with open("test-bpe2.txt", 'r', encoding = 'utf-8') as f:
+    with open("test-bpe.txt", 'r', encoding = 'utf-8') as f:
         test_enzh_bpe = f.readlines()
     with open("zhen/train.txt", 'r', encoding = 'utf-8') as f:
         train_zhen = f.readlines()
@@ -128,15 +128,19 @@ def get_features():
         ppl_test = ppl_test_enzh_bpe
         ppl_ref_train = ppl_train_zh
         ppl_ref_test = ppl_test_zh
-        prob_train_path = "prob_train_bpe.txt"
-        prob_test_path = "prob_test_bpe.txt"
+        prob_train_path = "prob_train_bpe2.txt"
+        prob_test_path = "prob_test_bpe2.txt"
+        gold_train_path = "gold_train_bpe.txt"
+        gold_test_path = "gold_test_bpe.txt"
         src = en_bpe
         ref = zh
     # out = open("features.txt", 'w', encoding = 'utf-8')
     X = []
     Y = []
-    probs_test = get_prob(prob_test_path)
-    probs_train = get_prob(prob_train_path)
+    prob_test = get_prob(prob_test_path)
+    prob_train = get_prob(prob_train_path)
+    gold_test = get_prob(gold_test_path)
+    gold_train = get_prob(gold_train_path)
     for i,sentence in enumerate(train[:10391]):
     # for i,sentence in enumerate(train[:5000]):
         sentence = sentence.replace('\n','').split()
@@ -156,7 +160,8 @@ def get_features():
         ppl_src = float(ppl_src_train[i])
         ppl = float(ppl_train[i])
         ppl_ref = float(ppl_ref_train[i])
-        prob = probs_train[i]
+        prob = prob_train[i]
+        gold = gold_train[i]
         # poss = pos([sentence])[0]
         # posr = pos([reference])[0]
         # pos1 = modified_p(poss, posr)
@@ -175,7 +180,7 @@ def get_features():
             p3 = 0
             # pos3 = 0
         # features = [length_src, length, length_ref, types_src, types, types_ref, p1, p2, p3, freq, freq_src, freq_ref, ppl, ppl_src, ppl_ref]
-        features = [length_src, length, length_ref, types_src, types, types_ref, p1, p2, p3, freq, freq_src, freq_ref, prob]
+        features = [length_src, length, length_ref, types_src, types, types_ref, p1, p2, p3, freq, freq_src, freq_ref, prob, gold]
         # features = [length_src, length, length_ref, types_src, types, types_ref, p1, p2, p3]
         # features = [length,ppl]
         # out.write('0')
@@ -205,7 +210,8 @@ def get_features():
         ppl_src = float(ppl_src_test[i])
         ppl = float(ppl_test[i])
         ppl_ref = float(ppl_ref_test[i])
-        prob = probs_test[i]
+        prob = prob_test[i]
+        gold = gold_test[i]
         # poss = pos([sentence])[0]
         # posr = pos([reference])[0]
         # pos1 = modified_p(poss, posr)
@@ -224,7 +230,7 @@ def get_features():
             p3 = 0
             # pos3 = 0
         # features = [length_src, length, length_ref, types_src, types, types_ref, p1, p2, p3, freq, freq_src, freq_ref, ppl, ppl_src, ppl_ref]
-        features = [length_src, length, length_ref, types_src, types, types_ref, p1, p2, p3, freq, freq_src, freq_ref, prob]
+        features = [length_src, length, length_ref, types_src, types, types_ref, p1, p2, p3, freq, freq_src, freq_ref, prob, gold]
         # features = [length_src, length, length_ref, types_src, types, types_ref, p1, p2, p3]
         # features = [length,ppl]
         # out.write('1')
@@ -372,49 +378,52 @@ def classify():
         GaussianNB(),
         QuadraticDiscriminantAnalysis()]
     
-    # accs = np.zeros(len(classifiers))
+    stacking = False
 
-    # for k in range(10):
-    #     X_train, X_test, Y_train, Y_test = train_test_split(np.array(X), np.array(Y), test_size = 0.1)
-    #     for i,clf in enumerate(classifiers):
-    #         clf.fit(X_train, Y_train)
-    #         X_pred = clf.predict(X_test)
-    #         correct = 0
-    #         # if i == 0:
-    #         #     print(clf.get_params())
-    #         for j,pred in enumerate(X_pred):
-    #             if pred == Y_test[j]:
-    #                 correct += 1
-    #         acc = correct/len(X_pred)
-    #         print(k, acc)
-    #         accs[i] += acc
-    # for acc in accs:
-    #     print(acc/10)
+    if not stacking:
+        accs = np.zeros(len(classifiers))
 
-    accs = 0
-    for k in range(10):
-        X_train, X_test, Y_train, Y_test = train_test_split(np.array(X), np.array(Y), test_size = 0.1)
-        all_preds = []
-        for clf in classifiers:
-            clf.fit(X_train, Y_train)
-            all_preds.append(clf.predict(X_test))
-        correct = 0
-        for i in range(len(X_test)):
-            ones = 0
-            zeros = 0
-            for preds in all_preds:
-                if preds[i] == 1:
-                    ones += 1
-                else: zeros += 1
-            if ones > zeros:
-                pred = 1
-            else: pred = 0
-            if pred == Y_test[i]:
-                correct +=1
-        acc = correct/len(X_test)
-        print(k, acc)
-        accs += acc
-    print(accs/10)
+        for k in range(10):
+            X_train, X_test, Y_train, Y_test = train_test_split(np.array(X), np.array(Y), test_size = 0.1)
+            for i,clf in enumerate(classifiers):
+                clf.fit(X_train, Y_train)
+                X_pred = clf.predict(X_test)
+                correct = 0
+                # if i == 0:
+                #     print(clf.get_params())
+                for j,pred in enumerate(X_pred):
+                    if pred == Y_test[j]:
+                        correct += 1
+                acc = correct/len(X_pred)
+                print(k, acc)
+                accs[i] += acc
+        for acc in accs:
+            print(acc/10)
+    else:
+        accs = 0
+        for k in range(10):
+            X_train, X_test, Y_train, Y_test = train_test_split(np.array(X), np.array(Y), test_size = 0.1)
+            all_preds = []
+            for clf in classifiers:
+                clf.fit(X_train, Y_train)
+                all_preds.append(clf.predict(X_test))
+            correct = 0
+            for i in range(len(X_test)):
+                ones = 0
+                zeros = 0
+                for preds in all_preds:
+                    if preds[i] == 1:
+                        ones += 1
+                    else: zeros += 1
+                if ones > zeros:
+                    pred = 1
+                else: pred = 0
+                if pred == Y_test[i]:
+                    correct +=1
+            acc = correct/len(X_test)
+            print(k, acc)
+            accs += acc
+        print(accs/10)
     
 
 def savefeatures():
