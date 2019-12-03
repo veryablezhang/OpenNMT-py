@@ -1,0 +1,11 @@
+sentence length(source, translated, reference)
+number of types(source, translated, reference)
+average word frequncy in whole corpus(source, translated, reference)
+modified 1,2,3-gram precision(translated to reference)
+POS precision(translated to reference)
+
+NLI-ESIM
+ppl ^^
+с╒нд pos
+seen 2_grams
+esim

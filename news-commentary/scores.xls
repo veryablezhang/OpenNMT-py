@@ -1,0 +1,4 @@
+	  avg sentence bleu		pred avg score	 pred ppl       	gold avg score	 gold ppl		multi-bleu
+test	0.14526		-0.5919	1.8075				"21.15, 58.6/28.9/16.4/9.7 (BP=0.928, ratio=0.930, hyp_len=113307, ref_len=121776)"
+train	0.23219		-0.5617	1.7536				"27.64, 64.0/36.2/23.1/15.3 (BP=0.919, ratio=0.922, hyp_len=457207, ref_len=495938)"
+valid	0.14858		-0.5911	1.806				"21.02, 58.6/28.9/16.4/9.7 (BP=0.923, ratio=0.926, hyp_len=114734, ref_len=123906)"

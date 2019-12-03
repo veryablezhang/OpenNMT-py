@@ -1,0 +1,9 @@
+python preprocess.py -train_src classify/src-train-bpe.txt -train_tgt news-commentary/tgt-train.txt -valid_src classify/src-test-bpe.txt -valid_tgt classify/tgt-test.txt -save_data model_bpe
+
+python train.py -data news-commentary/model -save_model news-commentary/model2 -save_checkpoint_steps 20000 -train_steps 100000 -keep_checkpoint 5 -world_size 1 -gpu_ranks 0
+
+python translate.py -model model_bpe_step_100000.pt -src classify/src-test-bpe.txt -output classify/test-bpe.txt -replace_unk -gpu 0
+
+perl tools/multi-bleu.perl news-commentary/tgt-test.txt < classify/test.txt
+
+10391
